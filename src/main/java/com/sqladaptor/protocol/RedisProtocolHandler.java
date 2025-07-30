@@ -70,10 +70,11 @@ public class RedisProtocolHandler extends ChannelInboundHandlerAdapter {
     }
     
     private String processCommand(RedisCommandNode commandNode) throws Exception {
-        String command = commandNode.getCommand();
+        String command = commandNode.getCommand().toUpperCase();  // 确保大写
         List<String> args = commandNode.getArguments();
         
         logger.debug("Processing command: {} with args: {}", command, args);
+        logger.debug("Command type: {}", commandNode.getType());
         
         switch (commandNode.getType()) {
             case CONNECTION:
@@ -86,7 +87,7 @@ public class RedisProtocolHandler extends ChannelInboundHandlerAdapter {
                 return handleDatabaseCommand(command, args);
             default:
                 // 处理CLIENT命令和其他未分类命令
-                if ("CLIENT".equalsIgnoreCase(command)) {
+                if ("CLIENT".equals(command)) {  // 现在command已经是大写的
                     return handleClientCommand(args);
                 }
                 return "-ERR Unknown command '" + command + "'\r\n";
@@ -136,7 +137,7 @@ public class RedisProtocolHandler extends ChannelInboundHandlerAdapter {
     }
     
     private String handleConnectionCommand(String command, List<String> args) {
-        switch (command) {
+        switch (command.toUpperCase()) {  // 添加 toUpperCase()
             case "PING":
                 if (args.isEmpty()) {
                     return "+PONG\r\n";
@@ -151,13 +152,16 @@ public class RedisProtocolHandler extends ChannelInboundHandlerAdapter {
                 } else {
                     return "-ERR wrong number of arguments for 'echo' command\r\n";
                 }
+            case "AUTH":
+                // 简单实现，接受任何密码
+                return "+OK\r\n";
             default:
                 return "-ERR Unknown connection command '" + command + "'\r\n";
         }
     }
     
     private String handleStringCommand(RedisCommandNode commandNode) throws Exception {
-        String command = commandNode.getCommand();
+        String command = commandNode.getCommand().toUpperCase();  // 添加 toUpperCase()
         List<String> args = commandNode.getArguments();
         
         switch (command) {
@@ -177,7 +181,7 @@ public class RedisProtocolHandler extends ChannelInboundHandlerAdapter {
     }
     
     private String handleHashCommand(RedisCommandNode commandNode) throws Exception {
-        String command = commandNode.getCommand();
+        String command = commandNode.getCommand().toUpperCase();  // 添加 toUpperCase()
         List<String> args = commandNode.getArguments();
         
         switch (command) {

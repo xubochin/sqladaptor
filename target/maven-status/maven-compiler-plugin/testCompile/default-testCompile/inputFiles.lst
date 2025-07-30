@@ -1,9 +1,0 @@
-D:\codes\sql-adptor-lite\src\test\java\com\sqladaptor\grammar\RedisGrammarTest.java
-D:\codes\sql-adptor-lite\src\test\java\com\sqladaptor\ast\RedisCommandNodeTest.java
-D:\codes\sql-adptor-lite\src\test\java\com\sqladaptor\redis\RedisConnectionTest.java
-D:\codes\sql-adptor-lite\src\test\java\com\sqladaptor\ast\CommandTypeTest.java
-D:\codes\sql-adptor-lite\src\test\java\com\sqladaptor\database\DatabaseManagerTest.java
-D:\codes\sql-adptor-lite\src\test\java\com\sqladaptor\converter\RedisToSqlConverterTest.java
-D:\codes\sql-adptor-lite\src\test\java\com\sqladaptor\BaseIntegrationTest.java
-D:\codes\sql-adptor-lite\src\test\java\com\sqladaptor\parser\RedisCommandParserTest.java
-D:\codes\sql-adptor-lite\src\test\java\com\sqladaptor\protocol\RedisProtocolHandlerTest.java

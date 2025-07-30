@@ -74,7 +74,7 @@ public class RedisCommandParser {
             throw new IllegalArgumentException("Empty command array");
         }
         
-        String command = elements.get(0);
+        String command = elements.get(0).toUpperCase();  // 确保命令大写
         List<String> arguments = elements.subList(1, elements.size());
         
         return new RedisCommandNode(command, arguments);
@@ -85,7 +85,7 @@ public class RedisCommandParser {
             // 预处理：将命令部分转换为大写
             String[] parts = input.trim().split("\\s+", 2);
             if (parts.length > 0) {
-                String command = parts[0].toUpperCase();
+                String command = parts[0].toUpperCase();  // 确保大写转换
                 String rest = parts.length > 1 ? parts[1] : "";
                 input = command + (rest.isEmpty() ? "" : " " + rest);
             }
