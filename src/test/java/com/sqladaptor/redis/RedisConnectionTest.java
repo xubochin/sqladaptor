@@ -16,8 +16,6 @@ import java.util.Map;
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class RedisConnectionTest {
     
-    //private static final String REDIS_URL = "redis://default:RuR1WwNMOzyyyMGLDBwUwbiKeMCo3usi@redis-11619.crce178.ap-east-1-1.ec2.redns.redis-cloud.com:11619";
-    //private static final String REDIS_URL = "redis://tcp.ap-southeast-1.clawcloudrun.com:46905";
     private static final String REDIS_URL = "redis://localhost:6379";
     private static final Object REDIS_LOCK = new Object();
     
