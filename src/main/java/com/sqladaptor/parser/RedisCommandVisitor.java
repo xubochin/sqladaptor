@@ -40,6 +40,7 @@ public class RedisCommandVisitor extends RedisBaseVisitor<RedisCommandNode> {
         return null;
     }
     
+    // 添加缺失的extractStringLiteral方法
     private String extractStringLiteral(RedisParser.StringLiteralContext ctx) {
         if (ctx.QUOTED_STRING() != null) {
             String quoted = ctx.QUOTED_STRING().getText();

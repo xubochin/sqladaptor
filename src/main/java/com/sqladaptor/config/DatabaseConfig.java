@@ -23,7 +23,7 @@ public class DatabaseConfig {
         
         // 设置默认值
         properties.putIfAbsent("database.type", "sqlite");
-        properties.putIfAbsent("database.path", "redis_adapter.db");
+        properties.putIfAbsent("database.path", "target/redis_adapter.db");
         properties.putIfAbsent("database.host", "localhost");
         properties.putIfAbsent("database.port", "21212");
         properties.putIfAbsent("database.username", "");

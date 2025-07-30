@@ -90,29 +90,36 @@ public class RedisCommandParser {
                 input = command + (rest.isEmpty() ? "" : " " + rest);
             }
             
-            // 使用ANTLR4解析器
+            // 使用ANTLR4解析器读取内容
             CharStream charStream = CharStreams.fromString(input);
             RedisLexer lexer = new RedisLexer(charStream);
+            // 移除默认错误监听器以避免控制台输出
+            lexer.removeErrorListeners();
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             RedisParser parser = new RedisParser(tokens);
+            parser.removeErrorListeners();
             
             // 解析命令
             RedisParser.CommandContext ctx = parser.command();
-            return visitor.visit(ctx);
+            if (ctx != null && ctx.exception == null) {
+                return visitor.visit(ctx);
+            }
         } catch (Exception e) {
-            // 如果ANTLR4解析失败，回退到简单解析
-            String[] parts = input.split("\\s+");
-            if (parts.length == 0) {
-                throw new IllegalArgumentException("Empty command");
-            }
-            
-            String command = parts[0];
-            List<String> arguments = new ArrayList<>();
-            if (parts.length > 1) {
-                arguments.addAll(Arrays.asList(parts).subList(1, parts.length));
-            }
-            
-            return new RedisCommandNode(command, arguments);
+            // 静默处理ANTLR4解析失败，回退到简单解析
         }
+        
+        // 如果ANTLR4解析失败，回退到简单解析
+        String[] parts = input.split("\\s+");
+        if (parts.length == 0) {
+            throw new IllegalArgumentException("Empty command");
+        }
+        
+        String command = parts[0].toUpperCase();  // 确保命令大写
+        List<String> arguments = new ArrayList<>();
+        if (parts.length > 1) {
+            arguments.addAll(Arrays.asList(parts).subList(1, parts.length));
+        }
+        
+        return new RedisCommandNode(command, arguments);
     }
 }

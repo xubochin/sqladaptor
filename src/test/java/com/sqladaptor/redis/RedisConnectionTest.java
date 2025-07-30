@@ -1,5 +1,6 @@
 package com.sqladaptor.redis;
 
+import com.sqladaptor.BaseIntegrationTest;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -14,7 +15,7 @@ import java.util.Set;
 import java.util.Map;
 
 @TestMethodOrder(MethodOrderer.MethodName.class)
-public class RedisConnectionTest {
+public class RedisConnectionTest extends BaseIntegrationTest {
     
     //private static final String REDIS_URL = "redis://default:RuR1WwNMOzyyyMGLDBwUwbiKeMCo3usi@redis-11619.crce178.ap-east-1-1.ec2.redns.redis-cloud.com:11619";
     //private static final String REDIS_URL = "redis://tcp.ap-southeast-1.clawcloudrun.com:46905";

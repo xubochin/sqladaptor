@@ -72,6 +72,7 @@ public class RedisCommandNode {
         COMMAND_TYPE_MAP.put("PING", CommandType.CONNECTION);
         COMMAND_TYPE_MAP.put("ECHO", CommandType.CONNECTION);
         COMMAND_TYPE_MAP.put("CLIENT", CommandType.CONNECTION);
+        COMMAND_TYPE_MAP.put("SELECT", CommandType.CONNECTION);  // 修复：从SERVER移到CONNECTION
         
         // Server commands
         COMMAND_TYPE_MAP.put("FLUSHDB", CommandType.SERVER);
@@ -80,7 +81,7 @@ public class RedisCommandNode {
         COMMAND_TYPE_MAP.put("CONFIG", CommandType.SERVER);
         COMMAND_TYPE_MAP.put("DBSIZE", CommandType.SERVER);
         COMMAND_TYPE_MAP.put("KEYS", CommandType.SERVER);
-        COMMAND_TYPE_MAP.put("SELECT", CommandType.SERVER);
+        // 移除SELECT，因为已移到CONNECTION类型
     }
     
     public RedisCommandNode(String command) {
@@ -95,8 +96,8 @@ public class RedisCommandNode {
         this.type = determineCommandType(command);
     }
     
-    // 优化后的命令类型判断方法
-    private CommandType determineCommandType(String command) {
+    // 将private改为public static，使测试代码可以访问
+    public static CommandType determineCommandType(String command) {
         if (command == null) {
             return CommandType.UNKNOWN;
         }

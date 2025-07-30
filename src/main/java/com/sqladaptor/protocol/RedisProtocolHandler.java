@@ -52,13 +52,18 @@ public class RedisProtocolHandler extends ChannelInboundHandlerAdapter {
             RedisCommandNode commandNode = commandParser.parse(request);
             String response = processCommand(commandNode);
             
-            ByteBuf responseBuf = Unpooled.copiedBuffer(response, CharsetUtil.UTF_8);
-            ctx.writeAndFlush(responseBuf);
+            // Check if channel is still active before writing response
+            if (ctx.channel().isActive()) {
+                ByteBuf responseBuf = Unpooled.copiedBuffer(response, CharsetUtil.UTF_8);
+                ctx.writeAndFlush(responseBuf);
+            }
         } catch (Exception e) {
             logger.error("Error processing Redis command", e);
-            String errorResponse = "-ERR " + e.getMessage() + "\r\n";
-            ByteBuf errorBuf = Unpooled.copiedBuffer(errorResponse, CharsetUtil.UTF_8);
-            ctx.writeAndFlush(errorBuf);
+            if (ctx.channel().isActive()) {
+                String errorResponse = "-ERR " + e.getMessage() + "\r\n";
+                ByteBuf errorBuf = Unpooled.copiedBuffer(errorResponse, CharsetUtil.UTF_8);
+                ctx.writeAndFlush(errorBuf);
+            }
         } finally {
             buf.release();
         }
@@ -690,7 +695,25 @@ public class RedisProtocolHandler extends ChannelInboundHandlerAdapter {
     
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        logger.error("Exception in Redis protocol handler", cause);
+        if (cause instanceof java.net.SocketException && 
+            cause.getMessage().contains("Connection reset")) {
+            // Log as debug instead of error for connection resets
+            logger.debug("Client disconnected: {}", cause.getMessage());
+        } else {
+            logger.error("Exception in Redis protocol handler", cause);
+        }
         ctx.close();
+    }
+    
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        logger.debug("Channel inactive: {}", ctx.channel().remoteAddress());
+        super.channelInactive(ctx);
+    }
+
+    @Override
+    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+        logger.debug("Channel unregistered: {}", ctx.channel().remoteAddress());
+        super.channelUnregistered(ctx);
     }
 }
