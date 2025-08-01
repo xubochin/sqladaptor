@@ -114,10 +114,10 @@ public class RedisGrammarTest {
     @Test
     void testCaseInsensitivity() {
         // 测试大小写不敏感
-        testCommand("get key", "get", Arrays.asList("key"));
+        testCommand("get key", "GET", Arrays.asList("key"));
         testCommand("SET key value", "SET", Arrays.asList("key", "value"));
-        testCommand("HgEt hash field", "HgEt", Arrays.asList("hash", "field"));
-        testCommand("ping", "ping", Arrays.asList());
+        testCommand("HgEt hash field", "HGET", Arrays.asList("hash", "field"));
+        testCommand("ping", "PING", Arrays.asList());
     }
     
     @Test

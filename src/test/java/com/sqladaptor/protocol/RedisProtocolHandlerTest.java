@@ -3,6 +3,7 @@ package com.sqladaptor.protocol;
 import com.sqladaptor.database.DatabaseManager;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.CharsetUtil;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,9 @@ public class RedisProtocolHandlerTest {
     @Mock
     private ChannelHandlerContext mockCtx;
     
+    @Mock
+    private Channel mockChannel;
+    
     private RedisProtocolHandler handler;
     private AutoCloseable closeable;
     
@@ -31,6 +35,10 @@ public class RedisProtocolHandlerTest {
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
         handler = new RedisProtocolHandler(mockDatabaseManager);
+        
+        // 配置mock channel
+        when(mockCtx.channel()).thenReturn(mockChannel);
+        when(mockChannel.isActive()).thenReturn(true);
     }
     
     @AfterEach

@@ -22,8 +22,13 @@ public class RedisToJdbcServer {
     }
     
     public void start() throws InterruptedException {
+        logger.info("正在启动Redis到JDBC适配器服务器，端口: {}", port);
+        
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
+        
+        logger.debug("已创建EventLoopGroup - Boss线程组: 1个线程, Worker线程组: {}个线程", 
+                    Runtime.getRuntime().availableProcessors() * 2);
         
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
@@ -32,30 +37,46 @@ public class RedisToJdbcServer {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) {
+                            logger.debug("新客户端连接初始化: {}", ch.remoteAddress());
                             ChannelPipeline pipeline = ch.pipeline();
                             pipeline.addLast(new RedisProtocolHandler(databaseManager));
+                            logger.debug("已为客户端 {} 添加RedisProtocolHandler", ch.remoteAddress());
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 128)
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
             
+            logger.info("服务器配置完成 - SO_BACKLOG: 128, SO_KEEPALIVE: true");
+            
             ChannelFuture future = bootstrap.bind(port).sync();
-            logger.info("Redis to JDBC Adapter Server started on port {}", port);
+            logger.info("Redis到JDBC适配器服务器已成功启动，监听端口: {}", port);
+            logger.info("服务器已准备好接受客户端连接...");
             
             future.channel().closeFuture().sync();
+        } catch (Exception e) {
+            logger.error("启动服务器时发生错误，端口: {}", port, e);
+            throw e;
         } finally {
+            logger.info("正在关闭服务器资源...");
             workerGroup.shutdownGracefully();
             bossGroup.shutdownGracefully();
+            logger.info("服务器资源已释放");
         }
     }
     
     public static void main(String[] args) {
+        logger.info("=== Redis到JDBC适配器服务器启动 ===");
         try {
+            logger.info("正在初始化数据库管理器...");
             DatabaseManager dbManager = new DatabaseManager();
+            logger.info("数据库管理器初始化完成");
+            
             RedisToJdbcServer server = new RedisToJdbcServer(6379, dbManager);
+            logger.info("服务器实例创建完成，准备启动...");
             server.start();
         } catch (Exception e) {
-            logger.error("Failed to start server", e);
+            logger.error("服务器启动失败", e);
+            System.exit(1);
         }
     }
 }

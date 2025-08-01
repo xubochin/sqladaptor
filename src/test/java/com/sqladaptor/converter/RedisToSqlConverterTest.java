@@ -3,6 +3,7 @@ package com.sqladaptor.converter;
 import com.sqladaptor.ast.RedisCommandNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
@@ -14,6 +15,11 @@ public class RedisToSqlConverterTest {
     @BeforeEach
     void setUp() {
         converter = new RedisToSqlConverter();
+    }
+    
+    @AfterEach
+    void tearDown() {
+        converter = null; // 显式清理引用
     }
     
     @Test

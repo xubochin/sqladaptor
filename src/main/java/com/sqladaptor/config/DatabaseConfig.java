@@ -13,7 +13,11 @@ public class DatabaseConfig {
     }
     
     private void loadProperties() {
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream("application.properties")) {
+        String configFileName = "application.properties";
+        if (System.getProperty("test") != null) {
+            configFileName = "application-test.properties";
+        }
+        try (InputStream input = getClass().getClassLoader().getResourceAsStream(configFileName)) {
             if (input != null) {
                 properties.load(input);
             }

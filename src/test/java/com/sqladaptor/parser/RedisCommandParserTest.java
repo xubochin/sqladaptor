@@ -3,6 +3,7 @@ package com.sqladaptor.parser;
 import com.sqladaptor.ast.RedisCommandNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class RedisCommandParserTest {
@@ -12,6 +13,11 @@ public class RedisCommandParserTest {
     @BeforeEach
     void setUp() {
         parser = new RedisCommandParser();
+    }
+    
+    @AfterEach
+    void tearDown() {
+        parser = null; // 显式清理引用
     }
     
     @Test

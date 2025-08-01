@@ -39,14 +39,11 @@
             <version>3.43.0.0</version>
         </dependency>
         
-        <!-- VoltDB client - 暂时注释掉解决依赖问题 -->
-        <!--
         <dependency>
             <groupId>org.voltdb</groupId>
             <artifactId>voltdbclient</artifactId>
-            <version>11.4</version>
+            <version>14.3.1</version>
         </dependency>
-        -->
         
         <!-- Logging -->
         <dependency>
@@ -132,6 +129,7 @@
                 <configuration>
                     <source>11</source>
                     <target>11</target>
+                    <failOnError>true</failOnError>
                 </configuration>
             </plugin>
             
