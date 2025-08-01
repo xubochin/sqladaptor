@@ -1,9 +1,0 @@
-com\sqladaptor\BaseIntegrationTest.class
-com\sqladaptor\converter\RedisToSqlConverterTest.class
-com\sqladaptor\ast\CommandTypeTest.class
-com\sqladaptor\ast\RedisCommandNodeTest.class
-com\sqladaptor\grammar\RedisGrammarTest.class
-com\sqladaptor\parser\RedisCommandParserTest.class
-com\sqladaptor\protocol\RedisProtocolHandlerTest.class
-com\sqladaptor\redis\RedisConnectionTest.class
-com\sqladaptor\database\DatabaseManagerTest.class
