@@ -1,13 +1,16 @@
 package com.sqladaptor;
 
 import com.sqladaptor.database.DatabaseManager;
+import redis.clients.jedis.Jedis;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.AfterAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class BaseIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(BaseIntegrationTest.class);
@@ -15,6 +18,9 @@ public abstract class BaseIntegrationTest {
     private static RedisToJdbcServer server;
     private static Thread serverThread;
     private static DatabaseManager databaseManager;
+    
+    // Redis连接配置
+    protected static final String REDIS_URL = "redis://:ii%407zY%24s%266Dg6%2A@192.168.100.13:6379/0";
     
     @BeforeAll
     static void startServer() throws Exception {
@@ -60,5 +66,49 @@ public abstract class BaseIntegrationTest {
     
     protected static int getServerPort() {
         return SERVER_PORT;
+    }
+    
+    /**
+     * 创建Redis连接，包含重试逻辑
+     */
+    protected Jedis createConnection() {
+        int maxRetries = 3;
+        int retryDelay = 1000;
+        
+        for (int i = 0; i < maxRetries; i++) {
+            try {
+                URI redisUri = URI.create(REDIS_URL);
+                System.out.println("Connection string " + redisUri);
+                Jedis jedis = new Jedis(redisUri, 300000, 300000);
+                jedis.ping();
+                return jedis;
+            } catch (Exception e) {
+                System.out.println("Connection attempt " + (i + 1) + " failed: " + e.getMessage());
+                if (i < maxRetries - 1) {
+                    try {
+                        Thread.sleep(retryDelay);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                } else {
+                    fail("Failed to connect to Redis after " + maxRetries + " attempts: " + e.getMessage());
+                }
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * 创建Redis连接（简化版本，不包含重试逻辑）
+     */
+    protected Jedis createSimpleConnection() {
+        try {
+            URI redisUri = URI.create(REDIS_URL);
+            return new Jedis(redisUri, 300000, 300000);
+        } catch (Exception e) {
+            fail("Failed to create Redis connection: " + e.getMessage());
+            return null;
+        }
     }
 }

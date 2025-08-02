@@ -109,4 +109,74 @@ public class HashCommandTest {
         }
         System.out.println("[TEST END] testAdvancedHashOperations\n");
     }
+    
+    @Test
+    void testHashIncrByOperations() {
+        System.out.println("[TEST START] testHashIncrByOperations - 测试HINCRBY命令");
+        String key = "test:hincrby:" + System.currentTimeMillis();
+        try (Jedis jedis = createConnection()) {
+            assertNotNull(jedis);
+            
+            // 初始设置一个数值字段
+            jedis.hset(key, "counter", "10");
+            
+            // HINCRBY操作 - 递增字段值
+            Long incrResult1 = jedis.hincrBy(key, "counter", 5);
+            assertEquals(15L, incrResult1);
+            
+            // 再次递增
+            Long incrResult2 = jedis.hincrBy(key, "counter", -3);
+            assertEquals(12L, incrResult2);
+            
+            // 对不存在的字段进行递增（应该从0开始）
+            Long incrResult3 = jedis.hincrBy(key, "newcounter", 100);
+            assertEquals(100L, incrResult3);
+            
+            // 验证最终值
+            String finalValue1 = jedis.hget(key, "counter");
+            assertEquals("12", finalValue1);
+            
+            String finalValue2 = jedis.hget(key, "newcounter");
+            assertEquals("100", finalValue2);
+            
+            jedis.del(key);
+        }
+        System.out.println("[TEST END] testHashIncrByOperations\n");
+    }
+    
+    @Test
+    void testHashLenOperations() {
+        System.out.println("[TEST START] testHashLenOperations - 测试HLEN命令");
+        String key = "test:hlen:" + System.currentTimeMillis();
+        try (Jedis jedis = createConnection()) {
+            assertNotNull(jedis);
+            
+            // 空哈希的长度应该为0
+            Long emptyLen = jedis.hlen(key);
+            assertEquals(0L, emptyLen);
+            
+            // 添加字段并测试长度
+            jedis.hset(key, "field1", "value1");
+            Long len1 = jedis.hlen(key);
+            assertEquals(1L, len1);
+            
+            jedis.hset(key, "field2", "value2");
+            jedis.hset(key, "field3", "value3");
+            Long len3 = jedis.hlen(key);
+            assertEquals(3L, len3);
+            
+            // 删除一个字段后测试长度
+            jedis.hdel(key, "field2");
+            Long len2 = jedis.hlen(key);
+            assertEquals(2L, len2);
+            
+            // 更新现有字段不应该改变长度
+            jedis.hset(key, "field1", "newvalue1");
+            Long lenAfterUpdate = jedis.hlen(key);
+            assertEquals(2L, lenAfterUpdate);
+            
+            jedis.del(key);
+        }
+        System.out.println("[TEST END] testHashLenOperations\n");
+    }
 }

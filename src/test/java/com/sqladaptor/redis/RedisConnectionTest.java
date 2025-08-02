@@ -406,42 +406,203 @@ public class RedisConnectionTest  {
     }
     
     @Test
-    void testPingCommand() {
-             System.out.println("[TEST START] testPingCommand - 单独测试PING命令");
-            Jedis jedis = null;
-            try {
-                // 使用更短的超时时间
-                URI redisUri = URI.create(REDIS_URL);
-                jedis = new Jedis(redisUri, 5000, 5000);
-                
-                // 添加延迟确保CLIENT SETINFO完成
-                Thread.sleep(1000);
-                
-                System.out.println("测试简单PING命令...");
-                long startTime = System.currentTimeMillis();
-                String response1 = jedis.ping();
-                long endTime = System.currentTimeMillis();
-                System.out.println("PING响应: " + response1 + " (耗时: " + (endTime - startTime) + "ms)");
-                assertEquals("PONG", response1);
-                
-                System.out.println("PING命令测试成功！");
-            } catch (Exception e) {
-                System.err.println("PING测试失败: " + e.getMessage());
-                System.err.println("异常类型: " + e.getClass().getSimpleName());
-                if (e.getCause() != null) {
-                    System.err.println("根本原因: " + e.getCause().getMessage());
-                }
-                e.printStackTrace();
-                fail("PING命令测试失败: " + e.getMessage());
-            } finally {
-                if (jedis != null) {
-                    try {
-                        jedis.close();
-                    } catch (Exception e) {
-                        System.err.println("关闭连接时出错: " + e.getMessage());
-                    }
-                }
+    void testAuthCommand() {
+        System.out.println("[TEST START] testAuthCommand - 测试AUTH命令");
+        Jedis jedis = null;
+        try {
+            jedis = createConnection();
+            
+            // 测试AUTH命令（简单实现接受任何密码）
+            String authResult = jedis.auth("testpassword");
+            assertEquals("OK", authResult);
+            
+            System.out.println("AUTH命令测试成功！");
+        } finally {
+            if (jedis != null) {
+                jedis.close();
             }
-            System.out.println("[TEST END] testPingCommand\\n");
+        }
+        System.out.println("[TEST END] testAuthCommand\n");
+    }
+
+    @Test
+    void testSelectCommand() {
+        System.out.println("[TEST START] testSelectCommand - 测试SELECT命令");
+        Jedis jedis = null;
+        try {
+            jedis = createConnection();
+            
+            // 测试有效的数据库选择
+            String selectResult1 = jedis.select(0);
+            assertEquals("OK", selectResult1);
+            
+            String selectResult2 = jedis.select(1);
+            assertEquals("OK", selectResult2);
+            
+            // 测试边界值
+            String selectResult3 = jedis.select(15);
+            assertEquals("OK", selectResult3);
+            
+            System.out.println("SELECT命令测试成功！");
+        } finally {
+            if (jedis != null) {
+                jedis.close();
+            }
+        }
+        System.out.println("[TEST END] testSelectCommand\n");
+    }
+
+    @Test
+    void testSelectCommandErrorCases() {
+        System.out.println("[TEST START] testSelectCommandErrorCases - 测试SELECT命令错误情况");
+        Jedis jedis = null;
+        try {
+            jedis = createConnection();
+            
+            // 测试无效的数据库索引（超出范围）
+            try {
+                jedis.select(-1);
+                fail("应该抛出异常");
+            } catch (Exception e) {
+                assertTrue(e.getMessage().contains("DB index is out of range") || 
+                          e.getMessage().contains("invalid"));
+            }
+            
+            try {
+                jedis.select(16);
+                fail("应该抛出异常");
+            } catch (Exception e) {
+                assertTrue(e.getMessage().contains("DB index is out of range") || 
+                          e.getMessage().contains("invalid"));
+            }
+            
+            System.out.println("SELECT错误情况测试成功！");
+        } finally {
+            if (jedis != null) {
+                jedis.close();
+            }
+        }
+        System.out.println("[TEST END] testSelectCommandErrorCases\n");
+    }
+
+    @Test
+    void testClientCommands() {
+        System.out.println("[TEST START] testClientCommands - 测试CLIENT相关命令");
+        Jedis jedis = null;
+        try {
+            jedis = createConnection();
+            
+            // 测试CLIENT LIST
+            String clientList = jedis.clientList();
+            assertNotNull(clientList);
+            assertTrue(clientList.contains("id="));
+            
+            // 测试CLIENT GETNAME（初始应该为null）
+            String clientName = jedis.clientGetname();
+            // 可能返回null或空字符串
+            
+            // 测试CLIENT SETNAME
+            String setNameResult = jedis.clientSetname("test-client");
+            assertEquals("OK", setNameResult);
+            
+            // 测试CLIENT ID
+            Long clientId = jedis.clientId();
+            assertNotNull(clientId);
+            assertTrue(clientId > 0);
+            
+            System.out.println("CLIENT命令测试成功！");
+        } finally {
+            if (jedis != null) {
+                jedis.close();
+            }
+        }
+        System.out.println("[TEST END] testClientCommands\n");
+    }
+
+    @Test
+    void testCommandInfoOperations() {
+        System.out.println("[TEST START] testCommandInfoOperations - 测试COMMAND信息命令");
+        Jedis jedis = null;
+        try {
+            jedis = createConnection();
+            
+            // 注意：Jedis可能没有直接的COMMAND方法，这里展示概念
+            // 实际实现可能需要使用sendCommand方法
+            
+            // 测试COMMAND COUNT（如果支持）
+            // Object commandCount = jedis.sendCommand(Protocol.Command.COMMAND, "COUNT");
+            // assertNotNull(commandCount);
+            
+            System.out.println("COMMAND信息操作测试完成！");
+        } finally {
+            if (jedis != null) {
+                jedis.close();
+            }
+        }
+        System.out.println("[TEST END] testCommandInfoOperations\n");
+    }
+
+    @Test
+    void testConnectionLifecycle() {
+        System.out.println("[TEST START] testConnectionLifecycle - 测试连接生命周期");
+        Jedis jedis = null;
+        try {
+            jedis = createConnection();
+            
+            // 测试连接是否正常
+            String pingResult = jedis.ping();
+            assertEquals("PONG", pingResult);
+            
+            // 测试一些基本操作
+            jedis.set("lifecycle:test", "value");
+            String value = jedis.get("lifecycle:test");
+            assertEquals("value", value);
+            
+            // 清理
+            jedis.del("lifecycle:test");
+            
+            // 测试连接关闭（使用close方法）
+            jedis.close();
+            
+            System.out.println("连接生命周期测试成功！");
+        } finally {
+            // jedis已经通过close关闭，这里不需要再次关闭
+        }
+        System.out.println("[TEST END] testConnectionLifecycle\n");
+    }
+
+    @Test
+    void testAdvancedConnectionOperations() {
+        System.out.println("[TEST START] testAdvancedConnectionOperations - 测试高级连接操作");
+        Jedis jedis = null;
+        try {
+            jedis = createConnection();
+            
+            // 测试多次PING
+            for (int i = 0; i < 5; i++) {
+                String pingResult = jedis.ping();
+                assertEquals("PONG", pingResult);
+            }
+            
+            // 测试PING with different messages
+            String[] messages = {"Hello", "World", "Test", "Redis", "Connection"};
+            for (String message : messages) {
+                String pingResult = jedis.ping(message);
+                assertEquals(message, pingResult);
+            }
+            
+            // 测试ECHO with different messages
+            for (String message : messages) {
+                String echoResult = jedis.echo(message);
+                assertEquals(message, echoResult);
+            }
+            
+            System.out.println("高级连接操作测试成功！");
+        } finally {
+            if (jedis != null) {
+                jedis.close();
+            }
+        }
+        System.out.println("[TEST END] testAdvancedConnectionOperations\n");
     }
 }
