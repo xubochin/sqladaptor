@@ -217,4 +217,16 @@ public class DatabaseManager {
             }
         }
     }
+
+    public Object executeListQuery(String s, Object any) {
+        return null;
+    }
+
+    public Object executeHashQuery(String s, Object any) {
+        return null;
+    }
+
+    public Object executeCountQuery(String s, Object any) {
+        return null;
+    }
 }
