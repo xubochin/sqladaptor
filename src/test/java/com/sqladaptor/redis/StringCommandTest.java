@@ -1,51 +1,21 @@
-package com.sqladaptor.integration;
+package com.sqladaptor.redis;
 
+import com.sqladaptor.BaseIntegrationTest;
 import redis.clients.jedis.Jedis;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.MethodOrderer;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.net.URI;
 import java.util.List;
 
 @TestMethodOrder(MethodOrderer.MethodName.class)
-public class StringCommandTest {
-    
-    private static final String REDIS_URL = "redis://:ii%407zY%24s%266Dg6%2A@192.168.100.13:6379/0";
-
-    private Jedis createConnection() {
-        int maxRetries = 3;
-        int retryDelay = 1000;
-        
-        for (int i = 0; i < maxRetries; i++) {
-            try {
-                URI redisUri = URI.create(REDIS_URL);
-                Jedis jedis = new Jedis(redisUri, 300000, 300000);
-                jedis.ping();
-                return jedis;
-            } catch (Exception e) {
-                if (i < maxRetries - 1) {
-                    try {
-                        Thread.sleep(retryDelay);
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
-                } else {
-                    fail("Failed to connect to Redis after " + maxRetries + " attempts: " + e.getMessage());
-                }
-            }
-        }
-        return null;
-    }
+public class StringCommandTest extends BaseIntegrationTest {
 
     @Test
     void testStringOperations() {
         System.out.println("[TEST START] testStringOperations - 测试字符串操作(SET/GET/DEL)");
-        Jedis jedis = null;
-        try {
-            jedis = createConnection();
+        try (Jedis jedis = createConnection()) {
             String key = "test:string:" + System.currentTimeMillis();
             String value = "Hello Redis!";
             
@@ -60,10 +30,6 @@ public class StringCommandTest {
             
             String deletedValue = jedis.get(key);
             assertNull(deletedValue);
-        } finally {
-            if (jedis != null) {
-                jedis.close();
-            }
         }
         System.out.println("[TEST END] testStringOperations\n");
     }
@@ -91,10 +57,7 @@ public class StringCommandTest {
     void testAdvancedStringOperations() {
         System.out.println("[TEST START] testAdvancedStringOperations - 测试高级字符串操作(APPEND/STRLEN/GETRANGE等)");
         String key = "test:advanced:" + System.currentTimeMillis();
-        Jedis jedis = null;
-        try {
-            jedis = createConnection();
-            
+        try (Jedis jedis = createConnection()) {
             jedis.set(key, "Hello");
             Long appendResult = jedis.append(key, " World");
             assertEquals(11L, appendResult);
@@ -119,10 +82,6 @@ public class StringCommandTest {
             assertEquals(12L, decrbyResult);
             
             jedis.del(key, numKey);
-        } finally {
-            if (jedis != null) {
-                jedis.close();
-            }
         }
         System.out.println("[TEST END] testAdvancedStringOperations\n");
     }

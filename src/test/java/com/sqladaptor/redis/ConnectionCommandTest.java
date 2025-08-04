@@ -7,8 +7,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.MethodOrderer;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.net.URI;
-import java.util.List;
 
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class ConnectionCommandTest extends BaseIntegrationTest {
@@ -16,77 +14,49 @@ public class ConnectionCommandTest extends BaseIntegrationTest {
     @Test
     void testConnection() {
         System.out.println("[TEST START] testConnection - 测试Redis基本连接");
-        Jedis jedis = null;
-        try {
+        try (Jedis jedis = createConnection()) {
             System.out.println("Testing Redis connection...");
-            jedis = createConnection();
             assertNotNull(jedis, "Redis连接不应为null");
-            
+
             String response = jedis.ping();
             assertEquals("PONG", response, "PING命令应返回PONG");
             System.out.println("✓ Redis连接测试成功: " + response);
         } catch (Exception e) {
             fail("Redis连接测试失败: " + e.getMessage());
-        } finally {
-            if (jedis != null) {
-                try {
-                    jedis.close();
-                    System.out.println("✓ Redis连接已关闭");
-                } catch (Exception e) {
-                    System.err.println("关闭Redis连接时出错: " + e.getMessage());
-                }
-            }
         }
     }
     
     @Test
     void testConnectionOperations() {
         System.out.println("[TEST START] testConnectionOperations - 测试连接操作(PING/ECHO)");
-        Jedis jedis = createConnection();
-        
-        assertNotNull(jedis);
-        String pingResult1 = jedis.ping();
-        assertEquals("PONG", pingResult1);
+        try (Jedis jedis = createConnection()) {
+            assertNotNull(jedis);
+            String pingResult1 = jedis.ping();
+            assertEquals("PONG", pingResult1);
 
-        String pingResult2 = jedis.ping("Hello");
-        assertEquals("Hello", pingResult2);
+            String pingResult2 = jedis.ping("Hello");
+            assertEquals("Hello", pingResult2);
 
-        String echoResult = jedis.echo("Test Message");
-        assertEquals("Test Message", echoResult);
-        
-        jedis.close();
+            String echoResult = jedis.echo("Test Message");
+            assertEquals("Test Message", echoResult);
+        }
         System.out.println("[TEST END] testConnectionOperations\n");
     }
     
     @Test
     void testPingCommand() {
         System.out.println("[TEST START] testPingCommand - 单独测试PING命令");
-        Jedis jedis = null;
-        try {
-            URI redisUri = URI.create(REDIS_URL);
-            jedis = new Jedis(redisUri, 5000, 5000);
-            
-            Thread.sleep(1000);
-            
+        try (Jedis jedis = createConnection()) {
             System.out.println("测试简单PING命令...");
             long startTime = System.currentTimeMillis();
             String response1 = jedis.ping();
             long endTime = System.currentTimeMillis();
             System.out.println("PING响应: " + response1 + " (耗时: " + (endTime - startTime) + "ms)");
             assertEquals("PONG", response1);
-            
             System.out.println("PING命令测试成功！");
         } catch (Exception e) {
             System.err.println("PING测试失败: " + e.getMessage());
             fail("PING命令测试失败: " + e.getMessage());
-        } finally {
-            if (jedis != null) {
-                try {
-                    jedis.close();
-                } catch (Exception e) {
-                    System.err.println("关闭连接时出错: " + e.getMessage());
-                }
-            }
         }
         System.out.println("[TEST END] testPingCommand\n");
     }
@@ -94,25 +64,13 @@ public class ConnectionCommandTest extends BaseIntegrationTest {
     @Test
     void testAuthCommand() {
         System.out.println("[TEST START] testAuthCommand - 测试AUTH命令");
-        Jedis jedis = null;
-        try {
-            // 创建一个新的连接来测试认证
-            jedis = createSimpleConnection();
-            
+        try (Jedis jedis = createConnection()) {
             // 检查连接状态而不是重新认证
             String response = jedis.ping();
             assertEquals("PONG", response, "认证后的连接应该能够正常PING");
             System.out.println("✓ AUTH命令测试成功，连接已认证");
         } catch (Exception e) {
             fail("AUTH命令测试失败: " + e.getMessage());
-        } finally {
-            if (jedis != null) {
-                try {
-                    jedis.close();
-                } catch (Exception e) {
-                    System.err.println("关闭Redis连接时出错: " + e.getMessage());
-                }
-            }
         }
     }
     
@@ -175,17 +133,13 @@ public class ConnectionCommandTest extends BaseIntegrationTest {
     @Test
     void testQuitCommand() {
         System.out.println("[TEST START] testQuitCommand - 测试QUIT退出命令");
-        Jedis jedis = createConnection();
-        assertNotNull(jedis);
-        
-        // 由于标准Jedis没有quit()方法，我们测试连接关闭
-        // 测试连接正常
-        String pingResult = jedis.ping();
-        assertEquals("PONG", pingResult);
-        
-        // 关闭连接
-        jedis.close();
-        
+        try (Jedis jedis = createConnection()) {
+            assertNotNull(jedis);
+            // 由于标准Jedis没有quit()方法，我们测试连接关闭
+            // 测试连接正常
+            String pingResult = jedis.ping();
+            assertEquals("PONG", pingResult);
+        }
         System.out.println("[TEST END] testQuitCommand\n");
     }
 }

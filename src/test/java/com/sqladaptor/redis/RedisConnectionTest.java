@@ -15,41 +15,7 @@ import java.util.Set;
 import java.util.Map;
 
 @TestMethodOrder(MethodOrderer.MethodName.class)
-public class RedisConnectionTest  {
-    
-    //private static final String REDIS_URL = "redis://:1234@127.0.0.1:6379";
-    private static final String REDIS_URL = "redis://:ii%407zY%24s%266Dg6%2A@192.168.100.13:6379/0";
-    //private static final String REDIS_URL = "redis://default:RuR1WwNMOzyyyMGLDBwUwbiKeMCo3usi@redis-11619.crce178.ap-east-1-1.ec2.redns.redis-cloud.com:11619";
-
-    private Jedis createConnection() {
-
-        int maxRetries = 3;
-        int retryDelay = 1000; // 1秒
-        
-        for (int i = 0; i < maxRetries; i++) {
-            try {
-                URI redisUri = URI.create(REDIS_URL);
-                System.out.println("Connection string "+redisUri);
-                Jedis jedis = new Jedis(redisUri, 300000, 300000);
-                // 测试连接
-                jedis.ping();
-                return jedis;
-            } catch (Exception e) {
-                System.out.println("Connection attempt " + (i + 1) + " failed: " + e.getMessage());
-                if (i < maxRetries - 1) {
-                    try {
-                        Thread.sleep(retryDelay);
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
-                } else {
-                    fail("Failed to connect to Redis after " + maxRetries + " attempts: " + e.getMessage());
-                }
-            }
-        }
-        return null;
-    }
+public class RedisConnectionTest extends BaseIntegrationTest {
     
     @Test
     void testConnection() {
@@ -351,71 +317,66 @@ public class RedisConnectionTest  {
     void testListOperations() {
         System.out.println("[TEST START] testListOperations - 测试列表操作(LPUSH/RPUSH/LRANGE等)");
         String key = "test:list:" + System.currentTimeMillis();
-        Jedis jedis =  createConnection();
-        // LPUSH和RPUSH操作
-        Long lpushResult = jedis.lpush(key, "left1", "left2");
-        assertEquals(2L, lpushResult);
         
-        Long rpushResult = jedis.rpush(key, "right1", "right2");
-        assertEquals(4L, rpushResult);
-        
-        // LLEN操作
-        Long llenResult = jedis.llen(key);
-        assertEquals(4L, llenResult);
-        
-        // LRANGE操作
-        List<String> lrangeResult = jedis.lrange(key, 0, -1);
-        assertEquals(4, lrangeResult.size());
-        assertEquals("left2", lrangeResult.get(0)); // 最后push的在前面
-        assertEquals("left1", lrangeResult.get(1));
-        assertEquals("right1", lrangeResult.get(2));
-        assertEquals("right2", lrangeResult.get(3));
-        
-        // LPOP和RPOP操作
-        String lpopResult = jedis.lpop(key);
-        assertEquals("left2", lpopResult);
-        
-        String rpopResult = jedis.rpop(key);
-        assertEquals("right2", rpopResult);
-        
-        // 验证剩余元素
-        assertEquals(2L, jedis.llen(key));
-        
-        // 清理
-        jedis.del(key);
+        try (Jedis jedis = createConnection()) {
+            Long lpushResult = jedis.lpush(key, "left1", "left2");
+            assertEquals(2L, lpushResult);
+
+            Long rpushResult = jedis.rpush(key, "right1", "right2");
+            assertEquals(4L, rpushResult);
+
+            Long llenResult = jedis.llen(key);
+            assertEquals(4L, llenResult);
+
+            List<String> lrangeResult = jedis.lrange(key, 0, -1);
+            assertEquals(4, lrangeResult.size());
+            assertEquals("left2", lrangeResult.get(0));
+            assertEquals("left1", lrangeResult.get(1));
+            assertEquals("right1", lrangeResult.get(2));
+            assertEquals("right2", lrangeResult.get(3));
+
+            String lpopResult = jedis.lpop(key);
+            assertEquals("left2", lpopResult);
+
+            String rpopResult = jedis.rpop(key);
+            assertEquals("right2", rpopResult);
+
+            assertEquals(2L, jedis.llen(key));
+
+            jedis.del(key);
+        }
         System.out.println("[TEST END] testListOperations\n");
     }
-    
+
     @Test
     void testConnectionOperations() {
         System.out.println("[TEST START] testConnectionOperations - 测试连接操作(PING/ECHO)");
-        Jedis jedis =  createConnection();
-        // PING操作
-        assertNotNull(jedis);
-        String pingResult1 = jedis.ping();
-        assertEquals("PONG", pingResult1);
+        
+        try (Jedis jedis = createConnection()) {
+            assertNotNull(jedis);
+            String pingResult1 = jedis.ping();
+            assertEquals("PONG", pingResult1);
 
-        // PING with message
-        String pingResult2 = jedis.ping("Hello");
-        assertEquals("Hello", pingResult2);
+            String pingResult2 = jedis.ping("Hello");
+            assertEquals("Hello", pingResult2);
 
-        // ECHO操作
-        String echoResult = jedis.echo("Test Message");
-        assertEquals("Test Message", echoResult);
+            String echoResult = jedis.echo("Test Message");
+            assertEquals("Test Message", echoResult);
+        }
         System.out.println("[TEST END] testConnectionOperations\n");
     }
-    
+
     @Test
     void testAuthCommand() {
         System.out.println("[TEST START] testAuthCommand - 测试AUTH命令");
         Jedis jedis = null;
         try {
             jedis = createConnection();
-            
+
             // 测试AUTH命令（简单实现接受任何密码）
-            String authResult = jedis.auth("testpassword");
+            String authResult = jedis.auth("ii@7zY$s&6Dg6*");
             assertEquals("OK", authResult);
-            
+
             System.out.println("AUTH命令测试成功！");
         } finally {
             if (jedis != null) {
@@ -431,18 +392,18 @@ public class RedisConnectionTest  {
         Jedis jedis = null;
         try {
             jedis = createConnection();
-            
+
             // 测试有效的数据库选择
             String selectResult1 = jedis.select(0);
             assertEquals("OK", selectResult1);
-            
+
             String selectResult2 = jedis.select(1);
             assertEquals("OK", selectResult2);
-            
+
             // 测试边界值
             String selectResult3 = jedis.select(15);
             assertEquals("OK", selectResult3);
-            
+
             System.out.println("SELECT命令测试成功！");
         } finally {
             if (jedis != null) {
@@ -458,24 +419,24 @@ public class RedisConnectionTest  {
         Jedis jedis = null;
         try {
             jedis = createConnection();
-            
+
             // 测试无效的数据库索引（超出范围）
             try {
                 jedis.select(-1);
                 fail("应该抛出异常");
             } catch (Exception e) {
-                assertTrue(e.getMessage().contains("DB index is out of range") || 
+                assertTrue(e.getMessage().contains("DB index is out of range") ||
                           e.getMessage().contains("invalid"));
             }
-            
+
             try {
                 jedis.select(16);
                 fail("应该抛出异常");
             } catch (Exception e) {
-                assertTrue(e.getMessage().contains("DB index is out of range") || 
+                assertTrue(e.getMessage().contains("DB index is out of range") ||
                           e.getMessage().contains("invalid"));
             }
-            
+
             System.out.println("SELECT错误情况测试成功！");
         } finally {
             if (jedis != null) {
@@ -491,25 +452,25 @@ public class RedisConnectionTest  {
         Jedis jedis = null;
         try {
             jedis = createConnection();
-            
+
             // 测试CLIENT LIST
             String clientList = jedis.clientList();
             assertNotNull(clientList);
             assertTrue(clientList.contains("id="));
-            
+
             // 测试CLIENT GETNAME（初始应该为null）
             String clientName = jedis.clientGetname();
             // 可能返回null或空字符串
-            
+
             // 测试CLIENT SETNAME
             String setNameResult = jedis.clientSetname("test-client");
             assertEquals("OK", setNameResult);
-            
+
             // 测试CLIENT ID
             Long clientId = jedis.clientId();
             assertNotNull(clientId);
             assertTrue(clientId > 0);
-            
+
             System.out.println("CLIENT命令测试成功！");
         } finally {
             if (jedis != null) {
@@ -525,14 +486,14 @@ public class RedisConnectionTest  {
         Jedis jedis = null;
         try {
             jedis = createConnection();
-            
+
             // 注意：Jedis可能没有直接的COMMAND方法，这里展示概念
             // 实际实现可能需要使用sendCommand方法
-            
+
             // 测试COMMAND COUNT（如果支持）
             // Object commandCount = jedis.sendCommand(Protocol.Command.COMMAND, "COUNT");
             // assertNotNull(commandCount);
-            
+
             System.out.println("COMMAND信息操作测试完成！");
         } finally {
             if (jedis != null) {
@@ -548,22 +509,22 @@ public class RedisConnectionTest  {
         Jedis jedis = null;
         try {
             jedis = createConnection();
-            
+
             // 测试连接是否正常
             String pingResult = jedis.ping();
             assertEquals("PONG", pingResult);
-            
+
             // 测试一些基本操作
             jedis.set("lifecycle:test", "value");
             String value = jedis.get("lifecycle:test");
             assertEquals("value", value);
-            
+
             // 清理
             jedis.del("lifecycle:test");
-            
+
             // 测试连接关闭（使用close方法）
             jedis.close();
-            
+
             System.out.println("连接生命周期测试成功！");
         } finally {
             // jedis已经通过close关闭，这里不需要再次关闭
@@ -577,26 +538,26 @@ public class RedisConnectionTest  {
         Jedis jedis = null;
         try {
             jedis = createConnection();
-            
+
             // 测试多次PING
             for (int i = 0; i < 5; i++) {
                 String pingResult = jedis.ping();
                 assertEquals("PONG", pingResult);
             }
-            
+
             // 测试PING with different messages
             String[] messages = {"Hello", "World", "Test", "Redis", "Connection"};
             for (String message : messages) {
                 String pingResult = jedis.ping(message);
                 assertEquals(message, pingResult);
             }
-            
+
             // 测试ECHO with different messages
             for (String message : messages) {
                 String echoResult = jedis.echo(message);
                 assertEquals(message, echoResult);
             }
-            
+
             System.out.println("高级连接操作测试成功！");
         } finally {
             if (jedis != null) {

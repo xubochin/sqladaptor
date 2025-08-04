@@ -1,5 +1,6 @@
 package com.sqladaptor.redis;
 
+import com.sqladaptor.BaseIntegrationTest;
 import redis.clients.jedis.Jedis;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -9,38 +10,8 @@ import java.util.List;
 import java.util.Map;
 import redis.clients.jedis.resps.Slowlog;
 
-import java.net.URI;
-
 @TestMethodOrder(MethodOrderer.MethodName.class)
-public class ServerCommandTest {
-    
-    private static final String REDIS_URL = "redis://:ii%407zY%24s%266Dg6%2A@192.168.100.13:6379/0";
-
-    private Jedis createConnection() {
-        int maxRetries = 3;
-        int retryDelay = 1000;
-        
-        for (int i = 0; i < maxRetries; i++) {
-            try {
-                URI redisUri = URI.create(REDIS_URL);
-                Jedis jedis = new Jedis(redisUri, 300000, 300000);
-                jedis.ping();
-                return jedis;
-            } catch (Exception e) {
-                if (i < maxRetries - 1) {
-                    try {
-                        Thread.sleep(retryDelay);
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
-                } else {
-                    fail("Failed to connect to Redis after " + maxRetries + " attempts: " + e.getMessage());
-                }
-            }
-        }
-        return null;
-    }
+public class ServerCommandTest extends BaseIntegrationTest {
     
     @Test
     void testServerOperations() {
@@ -51,11 +22,10 @@ public class ServerCommandTest {
             // INFO操作
             String infoResult = jedis.info();
             assertNotNull(infoResult);
-            assertTrue(infoResult.length() > 0);
+            assertFalse(infoResult.isEmpty());
             
             // DBSIZE操作
-            Long dbsizeResult = jedis.dbSize();
-            assertNotNull(dbsizeResult);
+            long dbsizeResult = jedis.dbSize();
             assertTrue(dbsizeResult >= 0);
             
             // TIME操作
@@ -136,9 +106,8 @@ public class ServerCommandTest {
             assertTrue(bgrewriteaofResult.contains("rewriting") || bgrewriteaofResult.equals("OK"));
             
             // LASTSAVE操作 - 最后保存时间
-            Long lastsaveResult = jedis.lastsave();
-            assertNotNull(lastsaveResult);
-            assertTrue(lastsaveResult > 0);
+            long lastnameResult = jedis.lastsave();
+            assertTrue(lastnameResult > 0);
             
         }
         System.out.println("[TEST END] testPersistenceOperations\n");
@@ -153,7 +122,7 @@ public class ServerCommandTest {
             // ROLE操作 - 获取角色信息
             List<Object> roleResult = jedis.role();
             assertNotNull(roleResult);
-            assertTrue(roleResult.size() > 0);
+            assertFalse(roleResult.isEmpty());
             
             // SLAVEOF操作 - 设置主从复制 (测试NO ONE)
             String slaveofResult = jedis.slaveofNoOne();
@@ -173,8 +142,7 @@ public class ServerCommandTest {
             List<Slowlog> slowlogGet = jedis.slowlogGet();
             assertNotNull(slowlogGet);
             
-            Long slowlogLen = jedis.slowlogLen();
-            assertNotNull(slowlogLen);
+            long slowlogLen = jedis.slowlogLen();
             assertTrue(slowlogLen >= 0);
             
             String slowlogReset = jedis.slowlogReset();
@@ -191,9 +159,8 @@ public class ServerCommandTest {
             assertNotNull(jedis);
             
             // COMMAND COUNT操作
-            Long commandCount = jedis.commandCount();
-            assertNotNull(commandCount);
-            assertTrue(commandCount > 0);            
+            long commandCount = jedis.commandCount();
+            assertTrue(commandCount > 0);
             // 移除不存在的command()方法调用
             // 可以使用其他方式测试命令相关功能
             

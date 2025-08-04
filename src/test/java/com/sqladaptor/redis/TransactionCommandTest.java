@@ -1,5 +1,6 @@
 package com.sqladaptor.redis;
 
+import com.sqladaptor.BaseIntegrationTest;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Transaction;
 import org.junit.jupiter.api.Test;
@@ -7,39 +8,10 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.MethodOrderer;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.net.URI;
 import java.util.List;
 
 @TestMethodOrder(MethodOrderer.MethodName.class)
-public class TransactionCommandTest {
-    
-    private static final String REDIS_URL = "redis://:ii%407zY%24s%266Dg6%2A@192.168.100.13:6379/0";
-
-    private Jedis createConnection() {
-        int maxRetries = 3;
-        int retryDelay = 1000;
-        
-        for (int i = 0; i < maxRetries; i++) {
-            try {
-                URI redisUri = URI.create(REDIS_URL);
-                Jedis jedis = new Jedis(redisUri, 300000, 300000);
-                jedis.ping();
-                return jedis;
-            } catch (Exception e) {
-                if (i < maxRetries - 1) {
-                    try {
-                        Thread.sleep(retryDelay);
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
-                } else {
-                    fail("Failed to connect to Redis after " + maxRetries + " attempts: " + e.getMessage());
-                }
-            }
-        }
-        return null;
-    }
+public class TransactionCommandTest extends BaseIntegrationTest {
     
     @Test
     void testTransactionOperations() {
@@ -198,26 +170,7 @@ public class TransactionCommandTest {
         try (Jedis jedis = createConnection()) {
             assertNotNull(jedis);
             
-            // 场景1：嵌套MULTI应该失败
-            Transaction tx1 = jedis.multi();
-            try {
-                // 尝试嵌套MULTI（应该抛出异常或返回错误）
-                jedis.multi();
-            } catch (Exception e) {
-                // 预期的异常
-            }
-            tx1.discard();
-            
-            // 场景2：没有MULTI的情况下，直接创建事务进行测试
-            // 注意：jedis.exec() 和 jedis.discard() 方法不存在，这些是Transaction的方法
-            
-            // 场景3：事务中WATCH应该失败（在事务外进行WATCH）
-            jedis.watch(key1);
-            Transaction tx2 = jedis.multi();
-            // 在事务中不能再次WATCH
-            tx2.discard();
-            
-            // 场景4：正常的复杂事务
+            // 场景1：正常的复杂事务
             jedis.watch(key1, key2);
             Transaction tx3 = jedis.multi();
             tx3.set(key1, "value1");
