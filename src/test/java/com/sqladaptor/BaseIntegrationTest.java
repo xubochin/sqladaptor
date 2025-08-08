@@ -17,8 +17,7 @@ public abstract class BaseIntegrationTest {
     private static DatabaseManager databaseManager; 
     
     // Redis连接配置
-    protected static final String REDIS_URL = "redis://:ii%407zY%24s%266Dg6%2A@100.72.37.21:6379/0";
-    //protected static final String REDIS_URL = "redis://127.0.0.1:6379";
+    protected static final String REDIS_URL = "redis://127.0.0.1:6379";
     
     // //@BeforeAll
     // static void startServer() throws Exception {

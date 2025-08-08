@@ -374,7 +374,7 @@ public class RedisConnectionTest extends BaseIntegrationTest {
             jedis = createConnection();
 
             // 测试AUTH命令（简单实现接受任何密码）
-            String authResult = jedis.auth("ii@7zY$s&6Dg6*");
+            String authResult = jedis.auth("test-password");
             assertEquals("OK", authResult);
 
             System.out.println("AUTH命令测试成功！");

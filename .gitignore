@@ -41,3 +41,15 @@ Thumbs.db
 
 # Redis source code directory
 redis-7.4/
+
+# Temporary connection files
+100.72.37.21_6379
+127.0.0.1_6379
+
+# Script files
+claudecode.bat
+claudecode.sh
+claudecode2.bat
+
+# Trae AI configuration directory
+.trae/
