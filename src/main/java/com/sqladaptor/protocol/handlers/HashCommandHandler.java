@@ -21,26 +21,36 @@ public class HashCommandHandler extends BaseCommandHandler {
         String command = commandNode.getCommand().toUpperCase();
         List<String> args = commandNode.getArguments();
 
-        logger.debug("Processing HASH command: {} with {} arguments", command, args.size());
+        logger.info("[HASH] Processing HASH command: {} with {} arguments: {}", command, args.size(), args);
+        System.out.println("[HASH DEBUG] Command: " + command + ", Args: " + args);
 
         switch (command) {
             case "HSET":
+                System.out.println("[HASH DEBUG] Executing HSET with args: " + args);
                 return handleHSet(args);
             case "HGET":
+                System.out.println("[HASH DEBUG] Executing HGET with args: " + args);
                 return handleHGet(args);
             case "HDEL":
+                System.out.println("[HASH DEBUG] Executing HDEL with args: " + args);
                 return handleHDel(args);
             case "HGETALL":
+                System.out.println("[HASH DEBUG] Executing HGETALL with args: " + args);
                 return handleHGetAll(args);
             case "HKEYS":
+                System.out.println("[HASH DEBUG] Executing HKEYS with args: " + args);
                 return handleHKeys(args);
             case "HVALS":
+                System.out.println("[HASH DEBUG] Executing HVALS with args: " + args);
                 return handleHVals(args);
             case "HEXISTS":
+                System.out.println("[HASH DEBUG] Executing HEXISTS with args: " + args);
                 return handleHExists(args);
             case "HINCRBY":
+                System.out.println("[HASH DEBUG] Executing HINCRBY with args: " + args);
                 return handleHIncrBy(args);
             case "HLEN":
+                System.out.println("[HASH DEBUG] Executing HLEN with args: " + args);
                 return handleHLen(args);
             default:
                 logger.warn("Unsupported HASH command: {}", command);
@@ -144,8 +154,22 @@ public class HashCommandHandler extends BaseCommandHandler {
         logger.debug("Executing HKEYS command with SQL: {}", sql);
         
         try {
-            String result = databaseManager.executeQuery(sql, args.get(0));
-            return result != null ? result : "*0\r\n";
+            List<String[]> results = databaseManager.executeQueryMultiple(sql, args.get(0));
+            
+            if (results.isEmpty()) {
+                return "*0\r\n";
+            }
+            
+            StringBuilder response = new StringBuilder();
+            response.append("*").append(results.size()).append("\r\n");
+            
+            for (String[] row : results) {
+                String field = row[0];
+                response.append("$").append(field.length()).append("\r\n")
+                        .append(field).append("\r\n");
+            }
+            
+            return response.toString();
         } catch (SQLException e) {
             logger.error("HKEYS command failed: {}", e.getMessage());
             return "-ERR " + e.getMessage() + "\r\n";
@@ -161,8 +185,22 @@ public class HashCommandHandler extends BaseCommandHandler {
         logger.debug("Executing HVALS command with SQL: {}", sql);
         
         try {
-            String result = databaseManager.executeQuery(sql, args.get(0));
-            return result != null ? result : "*0\r\n";
+            List<String[]> results = databaseManager.executeQueryMultiple(sql, args.get(0));
+            
+            if (results.isEmpty()) {
+                return "*0\r\n";
+            }
+            
+            StringBuilder response = new StringBuilder();
+            response.append("*").append(results.size()).append("\r\n");
+            
+            for (String[] row : results) {
+                String value = row[0];
+                response.append("$").append(value.length()).append("\r\n")
+                        .append(value).append("\r\n");
+            }
+            
+            return response.toString();
         } catch (SQLException e) {
             logger.error("HVALS command failed: {}", e.getMessage());
             return "-ERR " + e.getMessage() + "\r\n";
@@ -179,7 +217,11 @@ public class HashCommandHandler extends BaseCommandHandler {
         
         try {
             String result = databaseManager.executeQuery(sql, args.get(0), args.get(1));
-            return result != null ? result : ":0\r\n";
+            if (result != null && result.equals("1")) {
+                return ":1\r\n";
+            } else {
+                return ":0\r\n";
+            }
         } catch (SQLException e) {
             logger.error("HEXISTS command failed: {}", e.getMessage());
             return "-ERR " + e.getMessage() + "\r\n";
@@ -202,8 +244,14 @@ public class HashCommandHandler extends BaseCommandHandler {
         logger.debug("Executing HINCRBY command with SQL: {}", sql);
         
         try {
-            String result = databaseManager.executeQuery(sql, args.get(0), args.get(1), args.get(2));
-            return result != null ? result : ":0\r\n";
+            // HINCRBY的SQL参数顺序是: increment, key, field
+            int affected = databaseManager.executeUpdate(sql, args.get(2), args.get(0), args.get(1));
+            
+            // 获取更新后的值
+            String getValueSql = "SELECT value_data FROM redis_hash WHERE key_name = ? AND field_name = ?";
+            String newValue = databaseManager.executeQuery(getValueSql, args.get(0), args.get(1));
+            
+            return ":" + (newValue != null ? newValue : "0") + "\r\n";
         } catch (SQLException e) {
             logger.error("HINCRBY command failed: {}", e.getMessage());
             return "-ERR " + e.getMessage() + "\r\n";
@@ -220,7 +268,7 @@ public class HashCommandHandler extends BaseCommandHandler {
         
         try {
             String result = databaseManager.executeQuery(sql, args.get(0));
-            return result != null ? result : ":0\r\n";
+            return ":" + (result != null ? result : "0") + "\r\n";
         } catch (SQLException e) {
             logger.error("HLEN command failed: {}", e.getMessage());
             return "-ERR " + e.getMessage() + "\r\n";

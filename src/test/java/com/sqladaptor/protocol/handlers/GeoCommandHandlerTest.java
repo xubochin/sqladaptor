@@ -63,7 +63,7 @@ public class GeoCommandHandlerTest {
     void testHandleoDistCommand() throws Exception {
         when(mockDatabaseManager.executeQuery(anyString(), any())).thenReturn("166274.1516");
         
-        RedisCommandNode command = new RedisCommandNode("GEODIST", 
+        RedisCommandNode command = new RedisCommandNode("GEODIST",
             Arrays.asList("locations", "Palermo", "Catania"));
         String response = handler.handle(command);
         assertEquals("+166274.1516\r\n", response);

@@ -105,11 +105,11 @@ public class DatabaseManager {
                 "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)";
         
         String createHashTable = "CREATE TABLE IF NOT EXISTS redis_hash (" +
-                "hash_key TEXT, " +
+                "key_name TEXT, " +
                 "field_name TEXT, " +
                 "field_value TEXT, " +
                 "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
-                "PRIMARY KEY (hash_key, field_name))";
+                "PRIMARY KEY (key_name, field_name))";
         
         try (Statement stmt = connection.createStatement()) {
             logger.debug("Creating tables...");

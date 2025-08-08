@@ -56,7 +56,7 @@ public class ConnectionCommandHandlerTest {
         String result = handler.handle(pingCommand);
         
         // Then
-        assertEquals("$5\r\nHello\r\n", result);
+        assertEquals("+Hello\r\n", result);
     }
     
     @Test

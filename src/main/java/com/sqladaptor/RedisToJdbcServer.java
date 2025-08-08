@@ -15,6 +15,9 @@ public class RedisToJdbcServer {
     
     private final int port;
     private final DatabaseManager databaseManager;
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
+    private Channel serverChannel;
     
     public RedisToJdbcServer(int port, DatabaseManager databaseManager) {
         this.port = port;
@@ -24,8 +27,8 @@ public class RedisToJdbcServer {
     public void start() throws InterruptedException {
         logger.info("正在启动Redis到JDBC适配器服务器，端口: {}", port);
         
-        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        bossGroup = new NioEventLoopGroup(1);
+        workerGroup = new NioEventLoopGroup();
         
         logger.debug("已创建EventLoopGroup - Boss线程组: 1个线程, Worker线程组: {}个线程", 
                     Runtime.getRuntime().availableProcessors() * 2);
@@ -49,6 +52,7 @@ public class RedisToJdbcServer {
             logger.info("服务器配置完成 - SO_BACKLOG: 128, SO_KEEPALIVE: true");
             
             ChannelFuture future = bootstrap.bind(port).sync();
+            serverChannel = future.channel();
             logger.info("Redis到JDBC适配器服务器已成功启动，监听端口: {}", port);
             logger.info("服务器已准备好接受客户端连接...");
             
@@ -57,11 +61,26 @@ public class RedisToJdbcServer {
             logger.error("启动服务器时发生错误，端口: {}", port, e);
             throw e;
         } finally {
-            logger.info("正在关闭服务器资源...");
-            workerGroup.shutdownGracefully();
-            bossGroup.shutdownGracefully();
-            logger.info("服务器资源已释放");
+            stop();
         }
+    }
+    
+    public void stop() {
+        logger.info("正在关闭服务器资源...");
+        
+        if (serverChannel != null) {
+            serverChannel.close();
+        }
+        
+        if (workerGroup != null) {
+            workerGroup.shutdownGracefully();
+        }
+        
+        if (bossGroup != null) {
+            bossGroup.shutdownGracefully();
+        }
+        
+        logger.info("服务器资源已释放");
     }
     
     public static void main(String[] args) {

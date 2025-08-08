@@ -20,6 +20,11 @@
   - 流处理：XADD, XRANGE, XREAD, XGROUP, XREADGROUP
   - 位字段：BITFIELD
   - Lua脚本：SCRIPT LOAD, EVAL, EVALSHA（有限支持）
+- 🌐 **多语言支持**：
+  - 中文 (zh_CN)
+  - 英文 (en_US) 
+  - 日文 (ja_JP)
+  - 可配置的语言环境设置
 
 ## 支持的Redis命令
 
@@ -96,6 +101,36 @@
 - 🔒 生产环境使用时请考虑安全性配置
 - 📈 监控和日志记录可根据需要进行扩展
 - 🚫 Lua脚本执行功能受限，仅支持脚本管理操作
+- 🌐 多语言环境需要重启服务生效
+
+## 项目目录结构
+
+```
+sql-adptor-lite/
+├── README.md                    # 项目说明文档
+├── pom.xml                      # Maven 配置文件
+├── redis_adapter.db             # SQLite 数据库文件
+├── src/
+│   ├── main/
+│   │   ├── antlr4/              # ANTLR4 语法文件
+│   │   │   └── com/sqladaptor/grammar/
+│   │   │       └── Redis.g4     # Redis 命令语法定义
+│   │   ├── java/com/sqladaptor/
+│   │   │   ├── RedisToJdbcServer.java      # 主服务器类
+│   │   │   ├── ast/             # 抽象语法树相关
+│   │   │   ├── config/          # 配置管理
+│   │   │   ├── converter/       # Redis 到 SQL 转换器
+│   │   │   ├── database/        # 数据库管理
+│   │   │   ├── parser/          # Redis 命令解析器
+│   │   │   └── protocol/        # Redis 协议处理
+│   │   │       └── handlers/    # 各类命令处理器
+│   │   └── resources/
+│   │       ├── application.properties       # 应用配置
+│   │       ├── messages.properties          # 英文消息
+│   │       └── messages_zh_CN.properties    # 中文消息
+│   └── test/                    # 完整的单元测试和集成测试
+└── target/                      # Maven 编译输出目录
+```
 
 ## 技术栈
 
@@ -148,6 +183,8 @@ redis-cli -h localhost -p 6379
 
 ## 配置
 
+### 数据库配置
+
 编辑 `src/main/resources/application.properties` 文件来配置数据库连接：
 
 ```properties
@@ -161,6 +198,29 @@ database.path=redis_adapter.db
 # database.port=21212
 # database.username=your_username
 # database.password=your_password
+```
+
+### 语言配置
+
+配置应用程序的语言环境：
+
+```properties
+# 语言和地区配置 / Language and Locale Configuration
+application.locale=zh_CN          # 当前语言 (zh_CN, en_US, ja_JP)
+application.default.locale=en_US  # 默认语言
+application.supported.locales=en_US,zh_CN,ja_JP  # 支持的语言列表
+```
+
+### 日志配置
+
+精细化控制日志级别：
+
+```properties
+# 日志配置
+logging.level.root=INFO
+logging.level.com.sqladaptor=INFO
+logging.level.com.sqladaptor.protocol.RedisProtocolHandler=DEBUG
+logging.level.com.sqladaptor.database.DatabaseManager=INFO
 ```
 
 ## 数据库表结构

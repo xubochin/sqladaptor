@@ -1,72 +1,74 @@
 package com.sqladaptor;
 
 import com.sqladaptor.database.DatabaseManager;
-import redis.clients.jedis.Jedis;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.AfterAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.jedis.Jedis;
 
 import java.net.URI;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 public abstract class BaseIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(BaseIntegrationTest.class);
     private static final int SERVER_PORT = 6379;
     private static RedisToJdbcServer server;
     private static Thread serverThread;
-    private static DatabaseManager databaseManager;
+    private static DatabaseManager databaseManager; 
     
     // Redis连接配置
-    protected static final String REDIS_URL = "redis://:ii%407zY%24s%266Dg6%2A@192.168.100.13:6379/0";
+    protected static final String REDIS_URL = "redis://:ii%407zY%24s%266Dg6%2A@100.72.37.21:6379/0";
+    //protected static final String REDIS_URL = "redis://127.0.0.1:6379";
     
-    @BeforeAll
-    static void startServer() throws Exception {
-        logger.info("Starting Redis to JDBC Adapter Server for tests...");
+    // //@BeforeAll
+    // static void startServer() throws Exception {
+    //     logger.info("Starting Redis to JDBC Adapter Server for tests...");
         
-        // 初始化数据库管理器
-        databaseManager = new DatabaseManager();
+    //     // 初始化数据库管理器
+    //     databaseManager = new DatabaseManager();
         
-        // 创建服务器实例
-        server = new RedisToJdbcServer(SERVER_PORT, databaseManager);
+    //     // 创建服务器实例
+    //     server = new RedisToJdbcServer(SERVER_PORT, databaseManager);
         
-        // 在单独的线程中启动服务器
-        CompletableFuture<Void> serverFuture = CompletableFuture.runAsync(() -> {
-            try {
-                server.start();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                logger.warn("Server thread interrupted");
-            } catch (Exception e) {
-                logger.error("Failed to start server", e);
-            }
-        });
+    //     // 在单独的线程中启动服务器
+    //     CompletableFuture<Void> serverFuture = CompletableFuture.runAsync(() -> {
+    //         try {
+    //             server.start();
+    //         } catch (InterruptedException e) {
+    //             Thread.currentThread().interrupt();
+    //             logger.warn("Server thread interrupted");
+    //         } catch (Exception e) {
+    //             logger.error("Failed to start server", e);
+    //         }
+    //     });
         
-        // 等待服务器启动
-        Thread.sleep(2000); // 给服务器2秒时间启动
-        logger.info("Redis to JDBC Adapter Server started on port {}", SERVER_PORT);
-    }
+    //     // 等待服务器启动
+    //     Thread.sleep(2000); // 给服务器2秒时间启动
+    //     logger.info("Redis to JDBC Adapter Server started on port {}", SERVER_PORT);
+    // }
     
-    @AfterAll
-    static void stopServer() throws Exception {
-        logger.info("Stopping Redis to JDBC Adapter Server...");
+    //@AfterAll
+    // static void stopServer() throws Exception {
+    //     logger.info("Stopping Redis to JDBC Adapter Server...");
         
-        if (serverThread != null && serverThread.isAlive()) {
-            serverThread.interrupt();
-        }
+    //     if (server != null) {
+    //         server.stop();
+    //     }
         
-        if (databaseManager != null) {
-            databaseManager.close();
-        }
+    //     if (serverThread != null && serverThread.isAlive()) {
+    //         serverThread.interrupt();
+    //     }
         
-        logger.info("Redis to JDBC Adapter Server stopped");
-    }
+    //     if (databaseManager != null) {
+    //         databaseManager.close();
+    //     }
+    //
+    //     logger.info("Redis to JDBC Adapter Server stopped");
+    // }
     
-    protected static int getServerPort() {
-        return SERVER_PORT;
-    }
+//    protected static int getServerPort() {
+//        return SERVER_PORT;
+//    }
     
     /**
      * 创建Redis连接，包含重试逻辑

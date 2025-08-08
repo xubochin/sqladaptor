@@ -1,6 +1,7 @@
 package com.sqladaptor.redis;
 
 import com.sqladaptor.BaseIntegrationTest;
+import com.sqladaptor.database.DatabaseManager;
 import redis.clients.jedis.Jedis;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -21,8 +22,11 @@ public class ConnectionCommandTest extends BaseIntegrationTest {
             String response = jedis.ping();
             assertEquals("PONG", response, "PING命令应返回PONG");
             System.out.println("✓ Redis连接测试成功: " + response);
+
         } catch (Exception e) {
             fail("Redis连接测试失败: " + e.getMessage());
+        }finally {
+
         }
     }
     

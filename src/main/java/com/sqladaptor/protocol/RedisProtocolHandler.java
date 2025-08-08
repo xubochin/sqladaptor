@@ -23,7 +23,6 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.CharsetUtil;
 
 import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +35,6 @@ public class RedisProtocolHandler extends ChannelInboundHandlerAdapter {
     private static final Logger logger = LoggerFactory.getLogger(RedisProtocolHandler.class);
 
     private final DatabaseManager databaseManager;
-    private final RedisToSqlConverter converter;
     private final RedisCommandParser commandParser;
     private final ConnectionCommandHandler connectionCommandHandler;
     private final StringCommandHandler stringCommandHandler;
@@ -54,11 +52,10 @@ public class RedisProtocolHandler extends ChannelInboundHandlerAdapter {
     private static final AtomicLong totalConnections = new AtomicLong(0);
 
     private final Map<String, String> configSettings = new HashMap<>();
-    private final Map<String, String> loadedScripts = new HashMap<>();
 
     public RedisProtocolHandler(DatabaseManager databaseManager) {
         this.databaseManager = databaseManager;
-        this.converter = new RedisToSqlConverter();
+        RedisToSqlConverter converter = new RedisToSqlConverter();
         this.commandParser = new RedisCommandParser();
         this.connectionCommandHandler = new ConnectionCommandHandler(databaseManager, converter);
         this.stringCommandHandler = new StringCommandHandler(databaseManager, converter);
@@ -136,14 +133,23 @@ public class RedisProtocolHandler extends ChannelInboundHandlerAdapter {
             return;
         }
 
-        ByteBuf buf = (ByteBuf) msg;
+        ByteBuf buf = null;
+        if (msg instanceof ByteBuf) {
+            buf = (ByteBuf) msg;
+        }
         try {
-            String request = buf.toString(CharsetUtil.UTF_8);
-            logger.debug("收到来自 {} 的Redis命令: {}", clientAddress, request.trim());
+            String request = null;
+            if (buf != null) {
+                request = buf.toString(CharsetUtil.UTF_8);
+            }
+            if (request != null) {
+                logger.debug("收到来自 {} 的Redis命令: {}", clientAddress, request.trim());
+            }
 
             RedisCommandNode commandNode = commandParser.parse(request);
-            logger.debug("命令解析完成 - 客户端: {}, 命令: {}, 参数数量: {}",
-                    clientAddress, commandNode.getCommand(), commandNode.getArguments().size());
+            logger.info("[PROTOCOL] 命令解析完成 - 客户端: {}, 命令: {}, 参数: {}, 类型: {}",
+                    clientAddress, commandNode.getCommand(), commandNode.getArguments(), commandNode.getType());
+            System.out.println("[PROTOCOL DEBUG] Command: " + commandNode.getCommand() + ", Args: " + commandNode.getArguments() + ", Type: " + commandNode.getType());
 
             String response = processCommand(ctx, commandNode);
 
@@ -164,12 +170,13 @@ public class RedisProtocolHandler extends ChannelInboundHandlerAdapter {
                 logger.debug("错误响应已发送给客户端: {}", clientAddress);
             }
         } finally {
-            buf.release();
+            if (buf != null) {
+                buf.release();
+            }
         }
     }
 
     private String processCommand(ChannelHandlerContext ctx, RedisCommandNode commandNode) throws Exception {
-        long startTime = System.currentTimeMillis();
         String command = commandNode.getCommand().toUpperCase();
         List<String> args = commandNode.getArguments();
 
@@ -204,5 +211,9 @@ public class RedisProtocolHandler extends ChannelInboundHandlerAdapter {
             default:
                 return "-ERR Unsupported command type\r\n";
         }
+    }
+
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
     }
 }

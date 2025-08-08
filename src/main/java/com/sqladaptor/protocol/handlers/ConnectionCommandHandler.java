@@ -65,14 +65,14 @@ public class ConnectionCommandHandler extends BaseCommandHandler {
      */
     private String handlePing(List<String> args) {
         logger.info("[PING] Processing PING command, args size: {}", args.size());
-        
+
         if (args.isEmpty()) {
             logger.info("[PING] Returning PONG for simple PING");
             return "+PONG\r\n";
         } else {
             String message = args.get(0);
             logger.info("[PING] Returning message '{}' for PING with argument", message);
-            return "+" + message + "\r\n";
+            return "$" + message.length() + "\r\n" + message + "\r\n";
         }
     }
 
@@ -159,6 +159,8 @@ public class ConnectionCommandHandler extends BaseCommandHandler {
                 return handleClientGetName();
             case "SETNAME":
                 return handleClientSetName(args);
+            case "SETINFO":
+                return handleClientSetInfo(args);
             case "PAUSE":
                 return handleClientPause(args);
             case "KILL":
@@ -234,6 +236,19 @@ public class ConnectionCommandHandler extends BaseCommandHandler {
         
         String clientName = args.get(1);
         logger.info("[CLIENT SETNAME] Setting client name to: {}", clientName);
+        return "+OK\r\n";
+    }
+    
+    private String handleClientSetInfo(List<String> args) {
+        if (args.size() < 3) {
+            return "-ERR wrong number of arguments for 'client setinfo' command\r\n";
+        }
+        
+        String attribute = args.get(1);
+        String value = args.get(2);
+        logger.info("[CLIENT SETINFO] Setting client info: {} = {}", attribute, value);
+        
+        // CLIENT SETINFO 命令用于设置客户端信息，通常返回 OK
         return "+OK\r\n";
     }
     

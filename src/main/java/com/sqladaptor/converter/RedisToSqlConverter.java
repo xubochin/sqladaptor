@@ -52,6 +52,16 @@ public class RedisToSqlConverter {
                 return convertHDelToSql(args);
             case "HGETALL":
                 return convertHGetAllToSql(args);
+            case "HKEYS":
+                return convertHKeysToSql(args);
+            case "HVALS":
+                return convertHValsToSql(args);
+            case "HEXISTS":
+                return convertHExistsToSql(args);
+            case "HINCRBY":
+                return convertHIncrByToSql(args);
+            case "HLEN":
+                return convertHLenToSql(args);
             default:
                 throw new UnsupportedOperationException("Unsupported hash command: " + command);
         }
@@ -184,6 +194,47 @@ public class RedisToSqlConverter {
         }
         
         return "SELECT field_name, value_data FROM redis_hash WHERE key_name = ? ORDER BY field_name";
+    }
+    
+    private String convertHKeysToSql(List<String> args) throws Exception {
+        if (args.size() != 1) {
+            throw new IllegalArgumentException("HKEYS command requires exactly 1 argument");
+        }
+        
+        return "SELECT field_name FROM redis_hash WHERE key_name = ? ORDER BY field_name";
+    }
+    
+    private String convertHValsToSql(List<String> args) throws Exception {
+        if (args.size() != 1) {
+            throw new IllegalArgumentException("HVALS command requires exactly 1 argument");
+        }
+        
+        return "SELECT value_data FROM redis_hash WHERE key_name = ? ORDER BY field_name";
+    }
+    
+    private String convertHExistsToSql(List<String> args) throws Exception {
+        if (args.size() != 2) {
+            throw new IllegalArgumentException("HEXISTS command requires exactly 2 arguments");
+        }
+        
+        return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END as exists_result FROM redis_hash WHERE key_name = ? AND field_name = ?";
+    }
+    
+    private String convertHIncrByToSql(List<String> args) throws Exception {
+        if (args.size() != 3) {
+            throw new IllegalArgumentException("HINCRBY command requires exactly 3 arguments");
+        }
+        
+        return "UPDATE redis_hash SET value_data = CAST(COALESCE(value_data, '0') AS INTEGER) + CAST(? AS INTEGER), " +
+               "updated_at = CURRENT_TIMESTAMP WHERE key_name = ? AND field_name = ?";
+    }
+    
+    private String convertHLenToSql(List<String> args) throws Exception {
+        if (args.size() != 1) {
+            throw new IllegalArgumentException("HLEN command requires exactly 1 argument");
+        }
+        
+        return "SELECT COUNT(*) as hash_length FROM redis_hash WHERE key_name = ?";
     }
     
     // 工具方法

@@ -157,8 +157,8 @@ public class GeoCommandHandler extends BaseCommandHandler {
         // 计算距离（使用简化的球面距离公式）
         double distance = calculateDistance(loc1, loc2, unit);
         String distStr = String.valueOf(distance);
-        
-        return "$" + distStr.length() + "\r\n" + distStr + "\r\n";
+
+        return "+" + distStr + "\r\n";
     }
     
     /**
