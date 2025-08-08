@@ -38,3 +38,6 @@ Thumbs.db
 # Database files
 *.db
 *.sqlite
+
+# Redis source code directory
+redis-7.4/
